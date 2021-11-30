@@ -1,60 +1,47 @@
 ﻿using System;
+using Logika;
+using System.Collections.Generic;
+using System.IO;
+using  System.Globalization;
 
-namespace DZ1_oop
+namespace OOP_DZ2
 {
-
     class Program
     {
-        public static Weather FindWeatherWithLargestWindchill(Weather[] weathers)
-        {
-            Weather max = weathers[0];
-            double x = 0, Max = weathers[0].CalculateWindChill();
-            for (int i = 0; i < weathers.Length; i++)
-            {
-                x = weathers[i].CalculateWindChill();
-                if (x > Max)
-                {
-                    Max = x;
-                    max = weathers[i];
-
-                }
-            }
-
-            return max;
-
-        }
-
         static void Main(string[] args)
         {
-            Weather current = new Weather();
-            current.SetTemperature(24.12);
-            current.SetWindSpeed(3.5);
-            current.SetHumidity(0.56);
-            Console.WriteLine("Weather info:\n"
-                + "\ttemperature: " + current.GetTemperature() + "\n"
-                + "\thumidity: " + current.GetHumidity() + "\n"
-                + "\twind speed: " + current.GetWindSpeed() + "\n");
-            Console.WriteLine("Feels like: " + current.CalculateFeelsLikeTemperature());
+            DateTime monday = new DateTime(2021, 11, 8);
+            Weather mondayWeather = new Weather(6.17, 56.13, 4.9);
+            DailyForecast mondayForecast = new DailyForecast(monday, mondayWeather);
+            Console.WriteLine(monday.ToString());
+            Console.WriteLine(mondayWeather.GetAsString());
+            Console.WriteLine(mondayForecast.GetAsString());
 
-            Console.WriteLine("Finding weather info with largest windchill!");
-            const int Count = 5;
-            double[] temperatures = new double[Count] { 8.33, -1.45, 5.00, 12.37, 7.67 };
-            double[] humidities = new double[Count] { 0.3790, 0.4555, 0.743, 0.3750, 0.6612 };
-            double[] windSpeeds = new double[Count] { 4.81, 1.5, 5.7, 4.9, 1.2 };
 
-            Weather[] weathers = new Weather[Count];
-            for (int i = 0; i < weathers.Length; i++)
+            string fileName = "weather.forecast";
+            
+
+            if (File.Exists(fileName) == false)
             {
-                weathers[i] = new Weather(temperatures[i], humidities[i], windSpeeds[i]);
-                Console.WriteLine("Windchill for weathers[" + i + "] is: " + weathers[i].CalculateWindChill());
+                Console.WriteLine("The required file does not exist. Please create it, or change the path.");
+                return;
             }
 
-            Weather largestWindchill = FindWeatherWithLargestWindchill(weathers);
-            Console.WriteLine(
-                "Weather info:" + largestWindchill.GetTemperature() + ", " +
-                largestWindchill.GetHumidity() + ", " + largestWindchill.GetWindSpeed()
-            );
+            string[] dailyWeatherInputs = File.ReadAllLines(fileName);
 
+            DailyForecast[] dailyForecasts = new DailyForecast[dailyWeatherInputs.Length];
+            for (int i = 0; i < dailyForecasts.Length; i++)
+            {
+                dailyForecasts[i] = ForecastUtilities.Parse(dailyWeatherInputs[i]);
+
+            }
+
+            WeeklyForecast weeklyForecast = new WeeklyForecast(dailyForecasts);
+            Console.WriteLine(weeklyForecast.GetAsString());
+
+            Console.WriteLine("Maximal weekly temperature:");
+            Console.WriteLine(weeklyForecast.GetMaxTemperature());
+            Console.WriteLine(weeklyForecast[0].GetAsString());
         }
     }
 }
