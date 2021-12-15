@@ -15,7 +15,7 @@ namespace Logika
 
         public double Generate(double min, double max)
         {
-            return min + (max - min) * Math.Pow(generator.NextDouble(), 2);
+            return min + (max - min) * Math.Pow(generator.NextDouble(), 2.5);
         }
     }
 }
