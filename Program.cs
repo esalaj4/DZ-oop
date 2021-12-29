@@ -4,44 +4,72 @@ using System.Collections.Generic;
 using System.IO;
 using  System.Globalization;
 
+
 namespace OOP_DZ2
 {
     class Program
     {
         static void Main(string[] args)
         {
-            DateTime monday = new DateTime(2021, 11, 8);
-            Weather mondayWeather = new Weather(6.17, 56.13, 4.9);
-            DailyForecast mondayForecast = new DailyForecast(monday, mondayWeather);
-            Console.WriteLine(monday.ToString());
-            Console.WriteLine(mondayWeather.GetAsString());
-            Console.WriteLine(mondayForecast.GetAsString());
+            double minTemperature = -25.00, maxTemperature = 43.00;
+            double minHumidity = 0.0, maxHumidity = 100.00;
+            double minWindSpeed = 0.00, maxWindSpeed = 10.00;
+            IRandomGenerator randomGenerator = new UniformGenerator(new Random());
+            WeatherGenerator weatherGenerator = new WeatherGenerator(
+                   minTemperature, maxTemperature,
+                   minHumidity, maxHumidity,
+                   minWindSpeed, maxWindSpeed,
+                   randomGenerator
+             );
 
+            DailyForecastRepository repository = new DailyForecastRepository();
+            repository.Add(new DailyForecast(DateTime.Now, weatherGenerator.Generate()));
+            repository.Add(new DailyForecast(DateTime.Now.AddDays(1), weatherGenerator.Generate()));
+            repository.Add(new DailyForecast(DateTime.Now.AddDays(2), weatherGenerator.Generate()));
+            Console.WriteLine($"Current state of repository:{Environment.NewLine}{repository}");
 
-            string fileName = "weather.forecast";
-            
+            repository.Add(new DailyForecast(DateTime.Now.AddHours(2), weatherGenerator.Generate()));
+            Console.WriteLine($"Current state of repository:{Environment.NewLine}{repository}");
 
-            if (File.Exists(fileName) == false)
+            List<DailyForecast> forecasts = new List<DailyForecast>() {
+                new DailyForecast(DateTime.Now.AddDays(2), weatherGenerator.Generate()),
+                new DailyForecast(DateTime.Now.AddDays(3), weatherGenerator.Generate()),
+                new DailyForecast(DateTime.Now.AddDays(4), weatherGenerator.Generate()),
+                };
+            repository.Add(forecasts);
+            Console.WriteLine($"Current state of repository:{Environment.NewLine}{repository}");
+
+            try
             {
-                Console.WriteLine("The required file does not exist. Please create it, or change the path.");
-                return;
+                repository.Remove(DateTime.Now);
+                repository.Remove(DateTime.Now.AddDays(100));
+            }
+            catch (NoSuchDailyWeatherException exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+            Console.WriteLine($"Current state of repository:{Environment.NewLine}{repository}");
+
+            Console.WriteLine("Temperatures:");
+            foreach (DailyForecast dailyForecast in repository)
+            {
+                Console.WriteLine($"-> {dailyForecast.Weather.GetTemperature()}");
             }
 
-            string[] dailyWeatherInputs = File.ReadAllLines(fileName);
+            DailyForecastRepository copy = new DailyForecastRepository(repository);
+            Console.WriteLine($"Original repository:{Environment.NewLine}{repository}");
+            Console.WriteLine($"Cloned repository:{Environment.NewLine}{copy}");
 
-            DailyForecast[] dailyForecasts = new DailyForecast[dailyWeatherInputs.Length];
-            for (int i = 0; i < dailyForecasts.Length; i++)
-            {
-                dailyForecasts[i] = ForecastUtilities.Parse(dailyWeatherInputs[i]);
+            DailyForecast forecastToAdd = new DailyForecast(DateTime.Now, new Weather(-2.0, 47.12, 2.1));
+            copy.Add(forecastToAdd);
 
-            }
+            Console.WriteLine($"Original repository:{Environment.NewLine}{repository}");
+            Console.WriteLine($"Cloned repository:{Environment.NewLine}{copy}");
 
-            WeeklyForecast weeklyForecast = new WeeklyForecast(dailyForecasts);
-            Console.WriteLine(weeklyForecast.GetAsString());
-
-            Console.WriteLine("Maximal weekly temperature:");
-            Console.WriteLine(weeklyForecast.GetMaxTemperature());
-            Console.WriteLine(weeklyForecast[0].GetAsString());
         }
+
+
+
+       
     }
 }
